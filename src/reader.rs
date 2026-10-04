@@ -167,10 +167,10 @@ fn parse_relationships(xml: &str) -> Result<Vec<Relationship>, XlsxError> {
     loop {
         match reader.read_event_into(&mut buf) {
             Ok(quick_xml::events::Event::Empty(e) | quick_xml::events::Event::Start(e)) => {
-                if e.name().as_ref() == b"Relationship" {
-                    let id = attr_of(e.attributes(), b"Id");
-                    let ty = attr_of(e.attributes(), b"Type");
-                    let target = attr_of(e.attributes(), b"Target");
+                if e.name().as_ref() == "Relationship" {
+                    let id = attr_of(e.attributes(), "Id");
+                    let ty = attr_of(e.attributes(), "Type");
+                    let target = attr_of(e.attributes(), "Target");
                     if let (Some(id), Some(ty), Some(target)) = (id, ty, target) {
                         rels.push((id, ty, target));
                     }
@@ -211,9 +211,9 @@ fn parse_workbook(xml: &str) -> Result<(Vec<SheetRef>, Vec<String>), XlsxError> 
     loop {
         match reader.read_event_into(&mut buf) {
             Ok(quick_xml::events::Event::Empty(e) | quick_xml::events::Event::Start(e)) => {
-                if e.name().as_ref() == b"sheet" {
-                    let name = attr_of(e.attributes(), b"name").unwrap_or_default();
-                    let rid = local_attr(&e, b"id").unwrap_or_default();
+                if e.name().as_ref() == "sheet" {
+                    let name = attr_of(e.attributes(), "name").unwrap_or_default();
+                    let rid = local_attr(&e, "id").unwrap_or_default();
                     names.push((name, rid.clone()));
                     rids.push(rid);
                 }
@@ -248,28 +248,39 @@ fn parse_shared_strings(xml: &str) -> Result<SharedStrings, XlsxError> {
     loop {
         match reader.read_event_into(&mut buf) {
             Ok(quick_xml::events::Event::Start(e)) => match e.name().as_ref() {
-                b"si" => {
+                "si" => {
                     depth_si += 1;
                     current.clear();
                 }
-                b"t" if depth_si > 0 => in_t += 1,
+                "t" if depth_si > 0 => in_t += 1,
                 _ => {}
             },
             Ok(quick_xml::events::Event::End(e)) => match e.name().as_ref() {
-                b"si" => {
+                "si" => {
                     depth_si = depth_si.saturating_sub(1);
                     table.insert(&current);
                     current.clear();
                 }
-                b"t" => in_t = in_t.saturating_sub(1),
+                "t" => in_t = in_t.saturating_sub(1),
                 _ => {}
             },
             Ok(quick_xml::events::Event::Text(t)) if in_t > 0 => {
-                let unescaped = t.unescape().map_err(|source| XlsxError::Xml {
-                    part: String::from("xl/sharedStrings.xml"),
-                    source,
-                })?;
+                let unescaped =
+                    quick_xml::escape::unescape(t.as_ref()).map_err(|source| XlsxError::Xml {
+                        part: String::from("xl/sharedStrings.xml"),
+                        source: quick_xml::errors::Error::from(source),
+                    })?;
                 current.push_str(&unescaped);
+            }
+            Ok(quick_xml::events::Event::GeneralRef(r)) if in_t > 0 => {
+                // `&amp;` and friends arrive as their own event in 0.42.
+                let raw = format!("&{};", r.as_ref());
+                let resolved =
+                    quick_xml::escape::unescape(&raw).map_err(|source| XlsxError::Xml {
+                        part: String::from("xl/sharedStrings.xml"),
+                        source: quick_xml::errors::Error::from(source),
+                    })?;
+                current.push_str(&resolved);
             }
             Ok(quick_xml::events::Event::Eof) => break,
             Ok(_) => {}
@@ -295,20 +306,20 @@ fn parse_styles(xml: &str) -> Result<Styles, XlsxError> {
     loop {
         match reader.read_event_into(&mut buf) {
             Ok(quick_xml::events::Event::Start(e)) => {
-                if e.name().as_ref() == b"cellXfs" {
+                if e.name().as_ref() == "cellXfs" {
                     in_cell_xfs = true;
-                    declared = attr_of(e.attributes(), b"count").and_then(|c| c.parse().ok());
-                } else if in_cell_xfs && e.name().as_ref() == b"xf" {
+                    declared = attr_of(e.attributes(), "count").and_then(|c| c.parse().ok());
+                } else if in_cell_xfs && e.name().as_ref() == "xf" {
                     actual += 1;
                 }
             }
             Ok(quick_xml::events::Event::Empty(e)) => {
-                if in_cell_xfs && e.name().as_ref() == b"xf" {
+                if in_cell_xfs && e.name().as_ref() == "xf" {
                     actual += 1;
                 }
             }
             Ok(quick_xml::events::Event::End(e)) => {
-                if e.name().as_ref() == b"cellXfs" {
+                if e.name().as_ref() == "cellXfs" {
                     in_cell_xfs = false;
                 }
             }
@@ -347,7 +358,7 @@ fn parse_cell_coord(
     row_index: u32,
     col_cursor: u32,
 ) -> Result<(u32, u32), XlsxError> {
-    let coord = match attr_of(e.attributes(), b"r") {
+    let coord = match attr_of(e.attributes(), "r") {
         Some(r) => parse_cell_name(&r).map_err(|_| XlsxError::CorruptCell {
             reference: r.clone(),
             reason: "invalid cell reference",
@@ -355,6 +366,26 @@ fn parse_cell_coord(
         None => (row_index, col_cursor),
     };
     Ok(coord)
+}
+
+/// Routes captured text into the pending cell's value / formula / inline
+/// buffer according to the current capture mode.
+fn push_text(
+    pending: &mut Option<PendingCell>,
+    in_v: usize,
+    in_f: usize,
+    in_inline_t: bool,
+    text: &str,
+) {
+    if let Some(p) = pending.as_mut() {
+        if in_v > 0 {
+            p.value_text.get_or_insert_with(String::new).push_str(text);
+        } else if in_f > 0 {
+            p.formula.get_or_insert_with(String::new).push_str(text);
+        } else if in_inline_t {
+            p.inline_text.push_str(text);
+        }
+    }
 }
 
 fn parse_worksheet(name: &str, xml: &str) -> Result<SheetData, XlsxError> {
@@ -372,7 +403,7 @@ fn parse_worksheet(name: &str, xml: &str) -> Result<SheetData, XlsxError> {
 
     loop {
         match reader.read_event_into(&mut buf) {
-            Ok(quick_xml::events::Event::Empty(e)) if e.name().as_ref() == b"c" => {
+            Ok(quick_xml::events::Event::Empty(e)) if e.name().as_ref() == "c" => {
                 // Self-closing cell (e.g. style-only <c r="A3" s="1"/>):
                 // occupies its coordinate for the cursor, but holds no
                 // value or formula, so nothing is inserted.
@@ -380,21 +411,21 @@ fn parse_worksheet(name: &str, xml: &str) -> Result<SheetData, XlsxError> {
                 col_cursor = coord.1.saturating_add(1);
             }
             Ok(quick_xml::events::Event::Start(e)) => match e.name().as_ref() {
-                b"row" => {
+                "row" => {
                     row_counter += 1;
                     row_index =
-                        match attr_of(e.attributes(), b"r").and_then(|r| r.parse::<u32>().ok()) {
+                        match attr_of(e.attributes(), "r").and_then(|r| r.parse::<u32>().ok()) {
                             Some(r1) if r1 >= 1 => r1 - 1,
                             _ => u32::try_from(row_counter - 1).unwrap_or(u32::MAX),
                         };
                     col_cursor = 0;
                 }
-                b"c" => {
+                "c" => {
                     let coord = parse_cell_coord(&e, row_index, col_cursor)?;
                     col_cursor = coord.1.saturating_add(1);
-                    let style = attr_of(e.attributes(), b"s").and_then(|s| s.parse().ok());
+                    let style = attr_of(e.attributes(), "s").and_then(|s| s.parse().ok());
                     let cell_type =
-                        attr_of(e.attributes(), b"t").unwrap_or_else(|| String::from("n"));
+                        attr_of(e.attributes(), "t").unwrap_or_else(|| String::from("n"));
                     pending = Some(PendingCell {
                         coord,
                         style,
@@ -404,18 +435,18 @@ fn parse_worksheet(name: &str, xml: &str) -> Result<SheetData, XlsxError> {
                         formula: None,
                     });
                 }
-                b"v" => in_v += 1,
-                b"f" => in_f += 1,
-                b"t" if pending.as_ref().is_some_and(|p| p.cell_type == "inlineStr") => {
+                "v" => in_v += 1,
+                "f" => in_f += 1,
+                "t" if pending.as_ref().is_some_and(|p| p.cell_type == "inlineStr") => {
                     in_inline_t = true;
                 }
                 _ => {}
             },
             Ok(quick_xml::events::Event::End(e)) => match e.name().as_ref() {
-                b"v" => in_v = in_v.saturating_sub(1),
-                b"f" => in_f = in_f.saturating_sub(1),
-                b"t" => in_inline_t = false,
-                b"c" => {
+                "v" => in_v = in_v.saturating_sub(1),
+                "f" => in_f = in_f.saturating_sub(1),
+                "t" => in_inline_t = false,
+                "c" => {
                     if let Some(cell) = pending.take() {
                         if let Some(value) = finish_cell(cell)? {
                             cells.insert(value.0, value.1);
@@ -425,19 +456,23 @@ fn parse_worksheet(name: &str, xml: &str) -> Result<SheetData, XlsxError> {
                 _ => {}
             },
             Ok(quick_xml::events::Event::Text(t)) => {
-                let text = t.unescape().map_err(|source| XlsxError::Xml {
-                    part: String::from("worksheet"),
-                    source,
-                })?;
-                if let Some(p) = pending.as_mut() {
-                    if in_v > 0 {
-                        p.value_text.get_or_insert_with(String::new).push_str(&text);
-                    } else if in_f > 0 {
-                        p.formula.get_or_insert_with(String::new).push_str(&text);
-                    } else if in_inline_t {
-                        p.inline_text.push_str(&text);
-                    }
-                }
+                let text =
+                    quick_xml::escape::unescape(t.as_ref()).map_err(|source| XlsxError::Xml {
+                        part: String::from("worksheet"),
+                        source: quick_xml::errors::Error::from(source),
+                    })?;
+                push_text(&mut pending, in_v, in_f, in_inline_t, &text);
+            }
+            Ok(quick_xml::events::Event::GeneralRef(r)) => {
+                // `&lt;`-style references arrive as their own event in
+                // quick-xml 0.42; re-wrap and resolve (predefined + numeric).
+                let raw = format!("&{};", r.as_ref());
+                let resolved =
+                    quick_xml::escape::unescape(&raw).map_err(|source| XlsxError::Xml {
+                        part: String::from("worksheet"),
+                        source: quick_xml::errors::Error::from(source),
+                    })?;
+                push_text(&mut pending, in_v, in_f, in_inline_t, &resolved);
             }
             Ok(quick_xml::events::Event::Eof) => break,
             Ok(_) => {}
@@ -522,23 +557,29 @@ fn finish_cell(mut cell: PendingCell) -> Result<Option<FinishedCell>, XlsxError>
 }
 
 /// Fetches an attribute by exact (unqualified) name.
-fn attr_of(attrs: quick_xml::events::attributes::Attributes<'_>, key: &[u8]) -> Option<String> {
+fn attr_of(attrs: quick_xml::events::attributes::Attributes<'_>, key: &str) -> Option<String> {
     for attr in attrs {
         let attr = attr.ok()?;
         if attr.key.as_ref() == key {
-            // Attribute values are escaped raw bytes; unescape to text.
-            return attr.unescape_value().ok().map(std::borrow::Cow::into_owned);
+            // Attribute values are escaped text; unescape to plain text.
+            return attr
+                .normalized_value(quick_xml::XmlVersion::Implicit1_0)
+                .ok()
+                .map(std::borrow::Cow::into_owned);
         }
     }
     None
 }
 
 /// Fetches a namespaced attribute by local name (e.g. `r:id`).
-fn local_attr(e: &quick_xml::events::BytesStart<'_>, local: &[u8]) -> Option<String> {
+fn local_attr(e: &quick_xml::events::BytesStart<'_>, local: &str) -> Option<String> {
     for attr in e.attributes() {
         let attr = attr.ok()?;
         if attr.key.local_name().as_ref() == local {
-            return attr.unescape_value().ok().map(std::borrow::Cow::into_owned);
+            return attr
+                .normalized_value(quick_xml::XmlVersion::Implicit1_0)
+                .ok()
+                .map(std::borrow::Cow::into_owned);
         }
     }
     None

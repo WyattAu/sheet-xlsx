@@ -1,4 +1,14 @@
 
 # cargo-vet audits file
 
-[audits]
+[[audits.sheet-xlsx]]
+who = "Wyatt Au <wyatt_au@protonmail.com>"
+criteria = "safe-to-deploy"
+version = "0.1.0"
+notes = "First-party crate. Reviewed in-repo; no unsafe code (forbidden at compile time), typed-error totality on hostile input, property-tested round-trips."
+
+[[audits.sheet-xlsx]]
+who = "Wyatt Au <wyatt_au@protonmail.com>"
+criteria = "safe-to-deploy"
+version = "0.1.1"
+notes = "First-party crate. 0.1.1 migrates quick-xml 0.37 → 0.42 clearing RUSTSEC-2026-0194/0195; entity references now resolved on read. Reviewed in-repo."

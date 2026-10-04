@@ -25,6 +25,9 @@ url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
 [imports.zcash]
 url = "https://raw.githubusercontent.com/zcash/rust-ecosystem/main/supply-chain/audits.toml"
 
+[policy.sheet-xlsx]
+audit-as-crates-io = true
+
 [[exemptions.autocfg]]
 version = "1.5.1"
 criteria = "safe-to-run"
@@ -90,7 +93,7 @@ version = "1.11.0"
 criteria = "safe-to-run"
 
 [[exemptions.quick-xml]]
-version = "0.37.5"
+version = "0.42.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.r-efi]]

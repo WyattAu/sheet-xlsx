@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. Format: [Keep a
 Changelog](https://keepachangelog.com/) — versions follow [semver](https://semver.org).
 
+## [0.1.1] - 2026-10-04
+
+### Fixed
+
+- **Security: upgrade `quick-xml` 0.37 → 0.42** to clear
+  RUSTSEC-2026-0194 (quadratic duplicate-attribute checking) and
+  RUSTSEC-2026-0195 (unbounded namespace-declaration allocation) — both
+  reachable through `read_xlsx` on hostile packages. The reader migrates
+  to the 0.42 event API: names are `&str`, attribute values unescape via
+  `normalized_value`, and text entities (`&amp;`, `&#38;`, …) arrive as
+  `Event::GeneralRef` — now resolved instead of dropped.
+
 ## [0.1.0] - 2026-10-04
 
 ### Added

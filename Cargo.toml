@@ -1,0 +1,44 @@
+[package]
+name = "sheet-xlsx"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+authors = ["Wyatt Au <wyatt_au@protonmail.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/WyattAu/sheet-xlsx"
+homepage = "https://github.com/WyattAu/sheet-xlsx"
+documentation = "https://docs.rs/sheet-xlsx"
+description = "XLSX codec — workbook, worksheets, shared strings, styles, calc chain"
+readme = "README.md"
+keywords = ["xlsx", "spreadsheet", "ooxml", "excel", "openxml"]
+categories = ["encoding", "parser-implementations"]
+exclude = [".github/", "supply-chain/"]
+
+# Layer model: docs/layers.md in WyattAu/engineering-standards.
+# L1 — substrate over sheet-core L1 (same-layer composition is legal).
+[package.metadata.layers]
+tier = "L1"
+
+[dependencies]
+sheet-core = "0.1"
+zip = { version = "4", default-features = false, features = ["deflate"] }
+quick-xml = "0.37"
+
+[dev-dependencies]
+proptest = "1"
+serde_json = "1"
+
+[lints.rust]
+missing_docs = "deny"
+unsafe_code = "forbid"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+indexing_slicing = "deny"
+undocumented_unsafe_blocks = "deny"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1

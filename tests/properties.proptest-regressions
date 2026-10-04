@@ -1,0 +1,10 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 89fa496fb5ffc9a6b29d2f1d6f686c922b132e30ee91a89e63c8cc2539530cfa # shrinks to wb = XlsxWorkbook { sheets: [SheetData { name: "_", cells: {(0, 0): XlsxCell { value: SharedString(0), style_index: None, formula: None }} }], shared_strings: SharedStrings { strings: [] }, styles: Styles { cell_xfs: 0 } }
+cc 359ccff4c85ccbe2ebc10ac527dd7be5dc0d3de92d51bee8c34a89db523a63ed # shrinks to wb = XlsxWorkbook { sheets: [SheetData { name: "0", cells: {} }], shared_strings: SharedStrings { strings: [] }, styles: Styles { cell_xfs: 0 } }
+cc a547a6ebc3097470b25791038bf0fa90d145f17b8066e5b25abe1c9668937888 # shrinks to wb = XlsxWorkbook { sheets: [SheetData { name: "a", cells: {(0, 0): XlsxCell { value: SharedString(0), style_index: None, formula: None }} }], shared_strings: SharedStrings { strings: [] }, styles: Styles { cell_xfs: 0 } }
+cc ca7f84aec6663c79b0249d9c2848c0b4978d7a3e367769ed8c4b9d09a877d24c # shrinks to wb = XlsxWorkbook { sheets: [SheetData { name: "0", cells: {(0, 0): XlsxCell { value: FormulaString(""), style_index: None, formula: None }} }], shared_strings: SharedStrings { strings: ["shared 0"] }, styles: Styles { cell_xfs: 0 } }

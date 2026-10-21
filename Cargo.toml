@@ -21,7 +21,7 @@ tier = "L1"
 
 [dependencies]
 sheet-core = "0.1"
-zip = { version = "4", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
 quick-xml = "0.42"
 
 [dev-dependencies]

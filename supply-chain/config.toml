@@ -36,16 +36,8 @@ criteria = "safe-to-run"
 version = "2.13.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.bitflags]]
-version = "2.13.2"
-criteria = "safe-to-run"
-
 [[exemptions.cfg-if]]
 version = "1.0.5"
-criteria = "safe-to-deploy"
-
-[[exemptions.cfg_aliases]]
-version = "0.2.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.crc32fast]]
@@ -80,10 +72,6 @@ criteria = "safe-to-run"
 version = "0.2.190"
 criteria = "safe-to-deploy"
 
-[[exemptions.libc]]
-version = "0.2.190"
-criteria = "safe-to-run"
-
 [[exemptions.linux-raw-sys]]
 version = "0.12.1"
 criteria = "safe-to-run"
@@ -102,7 +90,7 @@ criteria = "safe-to-deploy"
 
 [[exemptions.proc-macro2]]
 version = "1.0.107"
-criteria = "safe-to-deploy"
+criteria = "safe-to-run"
 
 [[exemptions.proptest]]
 version = "1.11.0"
@@ -156,13 +144,17 @@ criteria = "safe-to-run"
 version = "0.1.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.sheet-xlsx]]
+version = "0.1.2"
+criteria = "safe-to-deploy"
+
 [[exemptions.simd-adler32]]
 version = "0.3.10"
 criteria = "safe-to-deploy"
 
 [[exemptions.syn]]
 version = "2.0.119"
-criteria = "safe-to-deploy"
+criteria = "safe-to-run"
 
 [[exemptions.syn]]
 version = "3.0.6"
@@ -174,7 +166,7 @@ criteria = "safe-to-deploy"
 
 [[exemptions.unicode-ident]]
 version = "1.0.26"
-criteria = "safe-to-deploy"
+criteria = "safe-to-run"
 
 [[exemptions.windows-sys]]
 version = "0.61.2"
@@ -187,10 +179,6 @@ criteria = "safe-to-run"
 [[exemptions.zerocopy-derive]]
 version = "0.8.59"
 criteria = "safe-to-run"
-
-[[exemptions.zip]]
-version = "4.6.1"
-criteria = "safe-to-deploy"
 
 [[exemptions.zip]]
 version = "9.0.5"

@@ -1,6 +1,6 @@
 # sheet-xlsx
 
-XLSX codec — workbook, worksheets, shared strings, styles, calc chain.
+XLSX codec: workbook, worksheets, shared strings, styles, calc chain.
 
 `sheet-xlsx` parses and serializes SpreadsheetML packages on top of
 [`sheet-core`](https://github.com/WyattAu/sheet-core): `read_xlsx(bytes)` →
@@ -15,23 +15,23 @@ shared 0-based `(row, col)` space; `A1` conversion is reused from
   relocated or renamed packages still parse. Absolute (`/xl/…`) and
   `..`-relative targets normalize.
 - **Faithful round-trips.** `write_xlsx` → `read_xlsx` reproduces
-  `XlsxCell`s exactly — including the shared-vs-inline string distinction,
+  `XlsxCell`s exactly: including the shared-vs-inline string distinction,
   error literals, cached formula results, and style indices. This is the
   property the suite checks on 500 random workbooks per run.
 - **Deterministic output.** Same workbook in, byte-identical package out
   (row-major cell order, stable part order, deflate).
 - **Derived calc chain.** `xl/calcChain.xml` is derived fresh from the
-  cell map on write and ignored on read — Excel rebuilds it, and a stale
+  cell map on write and ignored on read: Excel rebuilds it, and a stale
   chain is worse than none.
 - **Tolerant reader, strict model.** Unknown elements are skipped; cells
   with neither value nor formula are absent (blank-by-absence, matching
-  `sheet-core`). Genuinely broken data — invalid references, unparseable
-  numbers, dangling relationships — is a typed [`XlsxError`], never a
+  `sheet-core`). Genuinely broken data: invalid references, unparseable
+  numbers, dangling relationships: is a typed [`XlsxError`], never a
   panic.
 
 ## Known v0.1 limitations (documented)
 
-- **Style definitions are not modeled** — `Styles` is a `cellXfs` count;
+- **Style definitions are not modeled**: `Styles` is a `cellXfs` count;
   indices round-trip, fonts/fills/borders do not.
 - **Shared formulas**: the master keeps its text; slaves keep cached
   values, not translated formulas.
@@ -63,7 +63,7 @@ lints.
 `cargo build --locked --all-features` and `--no-default-features` ·
 `cargo test --all-features` · `clippy -D warnings` (+ zero pedantic
 warnings) · `cargo fmt --check` · `cargo deny check` · `cargo vet` ·
-coverage ≥ 90% (currently ~93%) · estate layer check — enforced by the
+coverage ≥ 90% (currently ~93%) · estate layer check: enforced by the
 shared [rust-kit workflow](https://github.com/WyattAu/engineering-standards).
 
 ## License

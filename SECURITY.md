@@ -1,4 +1,4 @@
-# Security Policy — sheet-xlsx
+# Security Policy: sheet-xlsx
 
 ## Supported versions
 
@@ -18,7 +18,7 @@ patch ships.
 
 ## Scope notes
 
-`sheet-xlsx` parses **untrusted file bytes** — the hostile-input boundary
+`sheet-xlsx` parses **untrusted file bytes**: the hostile-input boundary
 is `read_xlsx(&[u8])`. Security posture for integrators:
 
 - **Typed totality, no panics.** Malformed archives, broken relationship
@@ -27,7 +27,7 @@ is `read_xlsx(&[u8])`. Security posture for integrators:
   `#![forbid(unsafe_code)]`.
 - **Not a sandbox.** The codec parses structure; it does not evaluate
   formulas, resolve external references, or process macros. Formula text
-  is carried verbatim as data — callers that evaluate formulas own that
+  is carried verbatim as data: callers that evaluate formulas own that
   risk surface.
 - **No code execution paths.** The reader ignores every package part it
   does not consume (no external-entity expansion, no DTD processing,

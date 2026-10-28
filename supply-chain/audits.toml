@@ -12,3 +12,8 @@ who = "Wyatt Au <wyatt_au@protonmail.com>"
 criteria = "safe-to-deploy"
 version = "0.1.1"
 notes = "First-party crate. 0.1.1 migrates quick-xml 0.37 → 0.42 clearing RUSTSEC-2026-0194/0195; entity references now resolved on read. Reviewed in-repo."
+
+[[audits.sheet-xlsx]]
+who = "WyattAu <wyatt_au@protonmail.com>"
+criteria = "safe-to-deploy"
+version = "0.1.4"

@@ -144,10 +144,6 @@ criteria = "safe-to-run"
 version = "0.1.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.sheet-xlsx]]
-version = "0.1.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.simd-adler32]]
 version = "0.3.10"
 criteria = "safe-to-deploy"
